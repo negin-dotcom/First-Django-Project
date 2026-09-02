@@ -41,14 +41,14 @@ class OrderItem(models.Model):
                                  decimal_places=2)
 
     class Meta:
-            constraints = [
-                models.CheckConstraint(
-                            condition=models.Q(quantity__gte=1),
-                            name="quantity_gte_1"
-                            ),
-                
-                models.UniqueConstraint(
-                    fields=["order", "product"],
-                    name="unique_order_product"
-                    ),
-            ]
+        constraints = [
+            models.CheckConstraint(
+                        condition=models.Q(quantity__gte=1),
+                        name="quantity_gte_1"
+                        ),
+            
+            models.UniqueConstraint(
+                fields=["order", "product"],
+                name="unique_order_product"
+                ),
+        ]
