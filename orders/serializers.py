@@ -1,9 +1,6 @@
-from django.db import transaction
-
 from rest_framework import serializers
 
-from orders.services import create_order, restore_order_stock, update_order_status
-from products.models import Product
+from orders.services import create_order, update_order_status
 
 from .models import Order, OrderItem
 
@@ -14,18 +11,30 @@ class OrderItemSerializer(serializers.ModelSerializer):
         fields = ["order", "product", "quantity", "price",]
         read_only_fields = ["order", "price",]
 
+    def validate_quantity(self, value):
+        if value < 1:
+            raise serializers.ValidationError(
+                "Quantity must be at least 1."
+            )
+
+        return value
+
 
 class OrderSerializer(serializers.ModelSerializer):
     order_items = OrderItemSerializer(many=True, 
                                       read_only=True)
+    
+    order_items_data = OrderItemSerializer(many=True, 
+                                           write_only=True)
 
     class Meta:
         model = Order 
-        fields = ["created_by", "status", "total_price", "order_items",]
+        fields = ["created_by", "status", "total_price", "order_items",
+                  "order_items_data"]
         read_only_fields = ["created_by", "total_price",]
 
     def create(self, validated_data):
-        order_items_data = validated_data.pop("order_items")
+        order_items_data = validated_data.pop("order_items_data")
 
         return create_order(
             created_by=validated_data["created_by"],
