@@ -60,6 +60,10 @@ class OrderDetailView(APIView):
             serializer.data
         )
 
+    @extend_schema(
+        request=OrderSerializer,
+        responses=OrderSerializer
+    )
     def patch(self, request, pk):
         order = get_object_or_404(Order,
                                   pk=p) 

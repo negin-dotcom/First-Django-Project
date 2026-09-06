@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status 
 
+from drf_spectacular.utils import extend_schema
 
 from .models import Category, Product
 from .serializers import CategorySerializer, ProductSerializer
@@ -44,6 +45,10 @@ class ProductListCreateView(APIView):
             serializer.data
         )
 
+    @extend_schema(
+        request=ProductSerializer,
+        responses=ProductSerializer
+    )
     def post(self, request):
         serializer = ProductSerializer(data=request.data)
 

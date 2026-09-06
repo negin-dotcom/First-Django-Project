@@ -36,10 +36,14 @@ class OrderSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         order_items_data = validated_data.pop("order_items_data")
 
-        return create_order(
-            created_by=validated_data["created_by"],
-            order_items_data=order_items_data
-        )
+        try:
+            return create_order(
+                created_by=validated_data["created_by"],
+                order_items_data=order_items_data
+            )
+
+        except ValueError as e:
+            raise serializers.ValidationError(str(e))
 
     def update(self, instance, validated_data):
         new_status = validated_data.get("status")
