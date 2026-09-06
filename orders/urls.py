@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     OrderListCreateView,
     OrderDetailView,
-    OrderItemListCreateView,
+    OrderItemListView,
     OrderItemDetailView
 )
 
@@ -18,7 +18,7 @@ urlpatterns = [
           name="order"),
 
      path("order-items/",
-          OrderItemListCreateView.as_view(),
+          OrderItemListView.as_view(),
           name="order_items"),
 
      path("order-items/<int:pk>/",

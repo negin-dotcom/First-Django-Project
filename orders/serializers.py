@@ -2,6 +2,9 @@ from django.db import transaction
 
 from rest_framework import serializers
 
+from orders.services import create_order, restore_order_stock, update_order_status
+from products.models import Product
+
 from .models import Order, OrderItem
 
 
@@ -9,43 +12,39 @@ class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
         fields = ["order", "product", "quantity", "price",]
-        read_only_fields = ["price",]
+        read_only_fields = ["order", "price",]
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    order_items = OrderItemSerializer(many=True)
+    order_items = OrderItemSerializer(many=True, 
+                                      read_only=True)
 
     class Meta:
         model = Order 
         fields = ["created_by", "status", "total_price", "order_items",]
-        read_only_fields = ["total_price",]
+        read_only_fields = ["created_by", "total_price",]
 
-    @transaction.atomic 
     def create(self, validated_data):
         order_items_data = validated_data.pop("order_items")
 
-        order = Order.objects.create(
-            **validated_data,
-            total_price=0
+        return create_order(
+            created_by=validated_data["created_by"],
+            order_items_data=order_items_data
         )
 
-        total_price = 0
+    def update(self, instance, validated_data):
+        new_status = validated_data.get("status")
 
-        for order_item_data in order_items_data:
-            product = order_item_data["product"]
-            quantity = order_item_data["quantity"]
-            order_item_price = product.price
+        if new_status is not None:
+            try:
+                return update_order_status(
+                    order=instance, 
+                    new_status=new_status
+                )
 
-            OrderItem.objects.create(
-                order=order,
-                product=product,
-                quantity=quantity,
-                price=order_item_price
-            )
+            except ValueError as e:
+                raise serializers.ValidationError(str(e))
 
-            total_price += order_item_price * quantity 
 
-        order.total_price = total_price
-        order.save()
-
-        return order
+        return instance
+                

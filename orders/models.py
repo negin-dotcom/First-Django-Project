@@ -29,7 +29,7 @@ class Order(models.Model):
 class OrderItem(models.Model):        
     order = models.ForeignKey(Order,
                               related_name="order_items",
-                              on_delete=models.PROTECT)
+                              on_delete=models.CASCADE)
 
     product = models.ForeignKey(Product,
                                 related_name="order_items",
@@ -43,9 +43,9 @@ class OrderItem(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                        condition=models.Q(quantity__gte=1),
-                        name="quantity_gte_1"
-                        ),
+                condition=models.Q(quantity__gte=1),
+                name="quantity_gte_1"
+                ),
             
             models.UniqueConstraint(
                 fields=["order", "product"],
