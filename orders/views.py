@@ -66,7 +66,7 @@ class OrderDetailView(APIView):
     )
     def patch(self, request, pk):
         order = get_object_or_404(Order,
-                                  pk=p) 
+                                  pk=pk) 
 
         self.check_object_permissions(request, order)
         

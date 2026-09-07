@@ -75,6 +75,10 @@ class ProductDetailView(APIView):
             serializer.data
         )
 
+    @extend_schema(
+        request=ProductSerializer,
+        responses=ProductSerializer
+    )
     def put(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
         serializer = ProductSerializer(product,
@@ -90,7 +94,11 @@ class ProductDetailView(APIView):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-
+    
+    @extend_schema(
+        request=ProductSerializer,
+        responses=ProductSerializer
+    )
     def patch(self, request, pk):
             product = get_object_or_404(Product, pk=pk)
             serializer = ProductSerializer(product,
