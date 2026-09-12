@@ -30,6 +30,6 @@ A RESTful API for managing products, categories, orders, and order items, built 
 ### 1. Clone the repository
 
 ```bash 
-git clone https://github.com/negin-dotcom/inventory-api.git 
+git clone https://github.com/negin-dotcom/First-Django-Project.git 
 
-cd inventory-api
+cd First-Django-Project
