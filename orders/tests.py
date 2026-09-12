@@ -735,3 +735,198 @@ class OrderAPITests(APITestCase):
             Order.Status.CANCELLED
         )
 
+    def test_delete_pending_order(self):
+        product_category = Category.objects.create(
+            name="test_category"
+        )
+
+        product = Product.objects.create(
+            name="product",
+            price=Decimal("100.0"),
+            stock=5,
+            category=product_category
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        data = {
+            "order_items_data": [
+                {
+                    "product": product.id,
+                    "quantity": 2,
+                }
+            ]
+        }
+
+        response = self.client.post("/api/orders/",
+                                    data=data,
+                                    format="json")
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED
+        )
+
+        order = Order.objects.get(created_by=self.user)
+
+        self.assertEqual(
+            order.status,
+            Order.Status.PENDING
+        )
+
+        response = self.client.delete(f"/api/orders/{order.id}/")
+
+        product.refresh_from_db()
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_204_NO_CONTENT
+        )
+
+        self.assertEqual(
+            product.stock,
+            5
+        )
+
+        self.assertEqual(
+            Order.objects.count(),
+            0
+        )
+
+        self.assertEqual(
+            OrderItem.objects.count(),
+            0
+        )
+
+    def test_cannot_delete_non_pending_order(self):
+        product_category = Category.objects.create(
+            name="test_category"
+        )
+
+        product = Product.objects.create(
+            name="product",
+            price=Decimal("100.0"),
+            stock=5,
+            category=product_category
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        data = {
+            "order_items_data": [
+                {
+                    "product": product.id,
+                    "quantity": 2,
+                }
+            ]
+        }
+
+        response = self.client.post("/api/orders/",
+                                    data=data,
+                                    format="json")
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED
+        )
+
+        data = {
+            "status": Order.Status.PAID
+        }
+
+        order = Order.objects.get(created_by=self.user)
+
+        response = self.client.patch(f"/api/orders/{order.id}/",
+                                     data=data,
+                                     format="json")
+        order.refresh_from_db()
+
+        self.assertEqual(
+            order.status,
+            Order.Status.PAID
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+    
+        response = self.client.delete(f"/api/orders/{order.id}/")
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST
+        )
+
+        order.refresh_from_db()
+        product.refresh_from_db()
+
+        self.assertEqual(
+            Order.objects.count(),
+            1
+        )
+
+        self.assertEqual(
+            product.stock,
+            3
+        )
+
+    def test_invalid_status_transition(self):
+        product_category = Category.objects.create(
+            name="test_category"
+        )
+
+        product = Product.objects.create(
+            name="product",
+            price=Decimal("100.0"),
+            stock=5,
+            category=product_category
+        )
+
+        self.client.force_authenticate(
+            user=self.user
+        )
+
+        data = {
+            "order_items_data": [
+                {
+                    "product": product.id,
+                    "quantity": 2,
+                }
+            ]
+        }
+
+        response = self.client.post("/api/orders/",
+                                    data=data,
+                                    format="json")
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED
+        )
+
+        order = Order.objects.get(created_by=self.user)
+
+        data = {
+            "status": Order.Status.COMPLETED
+        }
+
+        response = self.client.patch(f"/api/orders/{order.id}/",
+                                        data=data,
+                                        format="json")
+    
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST
+        )
+
+        order.refresh_from_db()
+
+        self.assertEqual(
+            order.status,
+            Order.Status.PENDING
+        )
